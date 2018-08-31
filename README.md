@@ -26,3 +26,7 @@ git remote add origin https://github.com/sdoften/wearglasses
 4.5 输入git push -u origin master，这是把代码上传到github仓库的意思。执行完后，如果没有异常，会等待几秒，然后跳出一个让你输入Username和Password的窗口，你只要输入github的登录账号和密码就行了。
 
 账号密码都正确的话，会看到下面这么一个东西，进度还会跳，这个是上传过程中的进度，这个过程可能有点慢，有时候得等个10几分钟，这时候去github上面看，还是什么都没有的，所以大兄弟别着急，先做点其他的事，晚点再来看看。
+
+https://github.com/YadiraF/PRNet
+https://github.com/mkorunoski/3D-Face-Reconstruction
+https://learnopengl-cn.github.io/
