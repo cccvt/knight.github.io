@@ -599,7 +599,7 @@ int main(int argc, char** argv)
 // ==================================================
 //	MAIN
 // ==================================================
-int main(int argc, char** argv)
+int main1(vector<string>& ccompath,vector<string >& cfilenames)//, SDL_Window* window=NULL)
 {
 
 	// initialization----------------------------------------------------------------------
@@ -823,8 +823,19 @@ int main(int argc, char** argv)
 	vector<string > completepath;
 	vector<string > filename;
 
-	string picspath = "G:/Downloads/vggface2_test/test/300";// "C:/Users/123/Desktop/bugpics";// "res/vggface2train/3";// "res/n000259";
-	getFiles(picspath, completepath, filename);//"res/testprn"//smallscale//"res/test"//imm_face_db./路径末尾可以不用分隔符
+	//./参数形式有外部传入
+	if (1)
+	{	
+		completepath = ccompath;
+		filename = cfilenames;
+
+	}
+	else
+	{
+		string picspath = "G:/Downloads/vggface2_test/test/300";// "C:/Users/123/Desktop/bugpics";// "res/vggface2train/3";// "res/n000259";
+		getFiles(picspath, completepath, filename);//"res/testprn"//smallscale//"res/test"//imm_face_db./路径末尾可以不用分隔符
+
+	}
 
 	dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
 	dlib::shape_predictor sp;
@@ -851,7 +862,6 @@ int main(int argc, char** argv)
 		//"4500_1864_18.jpg";//长脸树下长发女
 		//"4500_2198_5.jpg";//老八字脸男
 		//"4500_809_13.jpg";//白衣女
-
 
 
 		std::string picpath = filename[index]; //./"4500_2357_10.jpg";//argv[1];// "4500_1864_18.jpg";// "4500_809_13.jpg";//"4500_2198_5.jpg";// 
@@ -1333,6 +1343,12 @@ try{
 		//savepath = savepath + "/" + filename[index];
 		cv::imwrite(savepath, dst);
 		//cv::imwrite(picspath + "_result/" + picpath, dst);
+		
+		
+
+		srcImageCV.release();
+		srct.release();
+		dst.release();
 
 	}
 
@@ -1372,4 +1388,103 @@ try{
 	return 0;
 }
 
+int main(int argc, char** argv)
+{
+	//// initialization----------------------------------------------------------------------
+	//SDL_Init(SDL_INIT_EVERYTHING);
+	//SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	//SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	//SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	//SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	//SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+	//SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+	//SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	//SDL_Window* window = SDL_CreateWindow(TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
+	//SDL_GLContext glContext = SDL_GL_CreateContext(window);
+
+	const int minbatch = 3000;
+	vector<string > completepath;
+	vector<string > filename;
+
+	string picspath = "G:/Downloads/vggface2_test/test/300";// "C:/Users/123/Desktop/bugpics";// "res/vggface2train/3";// "res/n000259";
+	getFiles(picspath, completepath, filename);//"res/testprn"//smallscale//"res/test"//imm_face_db./路径末尾可以不用分隔符
+	int i = 0;
+	for (;minbatch * i + minbatch<completepath.size();i++)
+	{
+		vector<string > completepath_minbatch(completepath.begin()+ minbatch*i, completepath.begin() + minbatch * i+ minbatch);
+		vector<string > filename_minbatch(filename.begin() + minbatch*i, filename.begin() + minbatch * i + minbatch);
+		
+		cout << "begin:	"<<i<<completepath[minbatch*i] << endl;
+		main1(completepath_minbatch, filename_minbatch);//, window);
+
+	}
+
+	cout << "end:	" <<i<< completepath[minbatch*i] << endl;
+
+	vector<string > completepath_minbatch(completepath.end() - minbatch, completepath.end());
+	vector<string > filename_minbatch(filename.end() - minbatch, filename.end());
+
+	main1(completepath_minbatch, filename_minbatch);//, window);
+	
+	//SDL_GL_DeleteContext(glContext);
+	//SDL_DestroyWindow(window);
+	//SDL_Quit();
+
+	return 0;
+}
+
+//直接简单的函数调用就行，每次调用结束，内存都会释放一大波出来。所以可以不必使用system调用方式
+int main_callsystem(int argc, char** argv)
+{
+	//// initialization----------------------------------------------------------------------
+	//SDL_Init(SDL_INIT_EVERYTHING);
+	//SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	//SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	//SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	//SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+	//SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+	//SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
+	//SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	//SDL_Window* window = SDL_CreateWindow(TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
+	//SDL_GLContext glContext = SDL_GL_CreateContext(window);
+
+	const int minbatch = 2000;
+	vector<string > completepath;
+	vector<string > filename;
+
+	string picspath = "G:/Downloads/vggface2_test/test/300";// "C:/Users/123/Desktop/bugpics";// "res/vggface2train/3";// "res/n000259";
+	getFiles(picspath, completepath, filename);//"res/testprn"//smallscale//"res/test"//imm_face_db./路径末尾可以不用分隔符
+	int i = 0;
+	for (; minbatch * i + minbatch<completepath.size(); i++)
+	{
+		vector<string > completepath_minbatch(completepath.begin() + minbatch*i, completepath.begin() + minbatch * i + minbatch);
+		vector<string > filename_minbatch(filename.begin() + minbatch*i, filename.begin() + minbatch * i + minbatch);
+
+		std::ofstream out("30identities.txt", std::ios::out);// | std::ios::app);
+		for (int index=0; index<completepath_minbatch.size(); index++)
+		{
+			out << completepath_minbatch[index] << std::endl;
+
+		}
+		out.close();
+
+		cout << "begin:	" << i << completepath[minbatch*i] << endl;
+		main1(completepath_minbatch, filename_minbatch);//, window);
+		
+		system("");
+	}
+
+	cout << "end:	" << i << completepath[minbatch*i] << endl;
+
+	vector<string > completepath_minbatch(completepath.end() - minbatch, completepath.end());
+	vector<string > filename_minbatch(filename.end() - minbatch, filename.end());
+
+	main1(completepath_minbatch, filename_minbatch);//, window);
+
+													//SDL_GL_DeleteContext(glContext);
+													//SDL_DestroyWindow(window);
+													//SDL_Quit();
+
+	return 0;
+}
 #endif
