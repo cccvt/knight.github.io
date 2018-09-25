@@ -74,7 +74,7 @@ const GLchar* VERTEX_SHADER_SOURCE[] = {
 	"	gl_Position = ndc;																			\n"
 	"	float u = map(ndc.x / ndc.w, -1, 1, 0, 1);													\n"
 	"	float v = map(ndc.y / ndc.w, -1, 1, 0, 1);													\n"
-	"	f_texCoords = vec2(u+v2.x/20, v-v2.y/20);																	\n"
+	"	f_texCoords = vec2(u+v2.x/10, v-v2.y/20);																	\n"
 	"}																								\n"
 };
 const GLchar* FRAGMENT_SHADER_SOURCE[] = {
@@ -162,7 +162,7 @@ const GLchar* FRAGMENT_SHADER_SOURCE[] = {
 //	cv::Point3f(1.47959,-0.05929,1.17575),//16
 //};
 
-// FEMALE-mini-2
+// FEMALE-其他部位的点效果不是很明显
 const cv::Point3f modelPointsArr[] =
 {
 	cv::Point3f(-1.030300, -0.41930, -0.38129),//36
@@ -174,22 +174,36 @@ const cv::Point3f modelPointsArr[] =
 	cv::Point3f(-0.599530, +1.10768, -0.71667),//48
 	cv::Point3f(+0.599530, +1.10768, -0.71667),//54
 	cv::Point3f(-0.000002, +1.99444, -0.94946),//8
+	
 											   //./ywl add
-	// cv::Point3f(-0.894518,-0.551335,-0.564469),//37
-	// cv::Point3f(-0.659822,-0.518812,-0.598789),//38
-	// cv::Point3f(0.880778,-0.294665,-0.557848),//46
-	//cv::Point3f(0.653891,-0.310396,-0.62867),//47
+	 cv::Point3f(-0.894518,-0.551335,-0.564469),//37
+	 cv::Point3f(-0.659822,-0.518812,-0.598789),//38
+	 cv::Point3f(-0.637257,-0.310396,-0.610667),//40
+	 cv::Point3f(-0.864146,-0.294665,-0.539839),//41
+
+	 cv::Point3f(0.671384,-0.54734,-0.625397),//43
+	 cv::Point3f(0.91115,-0.551335,-0.54646),//44
+
+	 cv::Point3f(0.880778,-0.294665,-0.557848),//46
+	cv::Point3f(0.653891,-0.310396,-0.62867),//47
 
 	 cv::Point3f(-1.4796,-0.05929,1.17575),//0
 	 cv::Point3f(1.47959,-0.05929,1.17575),//16
 	 cv::Point3f(-0.996478,1.63978,-0.012313),//5
 	 cv::Point3f(0.996478,1.63978,-0.012313),//11
-	 cv::Point3f(-1.19827,1.47996,0.435455),//4
+
+	cv::Point3f(-1.19827,1.47996,0.435455),//4
 	 cv::Point3f(1.19826,1.47996,0.435455),//12
 
+	 cv::Point3f(-0.000002,-0.555344,-0.774465),//27
+	 cv::Point3f(-0.000002,-0.165599,-0.959329),//28
+	 cv::Point3f(-0.000002,0.082843,-1.17602),//29
 	cv::Point3f(-0.000002,0.340833,-1.38839),//30
+
 	//cv::Point3f(-0.94543,-0.748272,-0.565522),//19
 	//cv::Point3f(0.94543,-0.748272,-0.565522)//24
+
+
 
 
 };
@@ -660,6 +674,7 @@ int main1(vector<string>& ccompath,vector<string >& cfilenames)//, SDL_Window* w
 	glDeleteShader(fragmentShader);
 	//=============================以上为着色器程序的准备阶段======================================================
 
+	Shader lightingShader("2.2.basic_lighting.vs", "2.2.basic_lighting.fs");
 
 	//=============================以上为ywl所建着色器程序的准备阶段======================================================
 	//人脸模型
@@ -682,11 +697,140 @@ int main1(vector<string>& ccompath,vector<string >& cfilenames)//, SDL_Window* w
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
 	glBindVertexArray(0);
 
+
+
+
+	//镜框模型20_12
+	#define  gn 6
+	IndexedModel mesh1[gn] = {
+		OBJModel("./res/glasses/1jingkuang.obj").ToIndexedModel(),
+		OBJModel("./res/glasses/2jingkuang.obj").ToIndexedModel(),
+		OBJModel("./res/glasses/4jingkuang.obj").ToIndexedModel(),
+		OBJModel("./res/glasses/8jingkuang.obj").ToIndexedModel(),
+		OBJModel("./res/glasses/11jingkuang.obj").ToIndexedModel(),
+		OBJModel("./res/glasses/7jingkuang.obj").ToIndexedModel(),
+		//OBJModel("./res/glasses/2jingkuang.obj").ToIndexedModel(),
+		//OBJModel("./res/glasses/2jingkuang.obj").ToIndexedModel(),
+		//OBJModel("./res/glasses/2jingkuang.obj").ToIndexedModel(),
+	};
+	GLuint jkVBO[gn * 3], jkVAO[gn]; 
+	GLuint jknumVertices[gn] = { 0 };
+	GLuint jknumIndices[gn] = {0};
+
+	
+	glGenVertexArrays(gn, jkVAO);
+	glGenBuffers(3*gn, jkVBO);
+
+	for (int i=0;i<gn;i++)
+	{
+		mesh1[i].CalcNormals();
+
+		jknumVertices[i] = mesh1[i].positions.size();
+		jknumIndices[i] = mesh1[i].indices.size();
+
+		glBindVertexArray(jkVAO[i]);
+		glBindBuffer(GL_ARRAY_BUFFER, jkVBO[i*3]);
+		glBufferData(GL_ARRAY_BUFFER, jknumVertices[i] * sizeof(glm::vec3), &mesh1[i].positions[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, jkVBO[i * 3+1]);
+		glBufferData(GL_ARRAY_BUFFER, mesh1[i].normals.size() * sizeof(glm::vec3), &mesh1[i].normals[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
+		glEnableVertexAttribArray(1);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, jkVBO[i * 3+2]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, jknumIndices[i] * sizeof(unsigned int), &mesh1[i].indices[0], GL_STATIC_DRAW);
+
+		glBindVertexArray(0);
+		
+	}	
+
 	//镜片模型
-	IndexedModel mesh2 = OBJModel("./res/glasses/20_2.obj").ToIndexedModel();//./male_face_eyes.obj
-	mesh2.CalcNormals();
-	GLuint numVertices2 = mesh2.positions.size();
-	GLuint numIndices2 = mesh2.indices.size();
+	IndexedModel mesh2[gn] = {
+		OBJModel("./res/glasses/1jingpian.obj").ToIndexedModel() ,
+		OBJModel("./res/glasses/2jingpian.obj").ToIndexedModel(),
+		OBJModel("./res/glasses/4jingpian.obj").ToIndexedModel(),
+		OBJModel("./res/glasses/8jingpian.obj").ToIndexedModel(),
+		OBJModel("./res/glasses/11jingpian.obj").ToIndexedModel(),
+		OBJModel("./res/glasses/7jingpian.obj").ToIndexedModel(),
+		//OBJModel("./res/glasses/8jingpian.obj").ToIndexedModel(),
+		//OBJModel("./res/glasses/2jingpian.obj").ToIndexedModel(),
+		//OBJModel("./res/glasses/2jingpian.obj").ToIndexedModel(),
+	};
+	GLuint jpVBO[gn * 2], jpVAO[gn];
+	GLuint jpnumVertices[gn] = { 0 };
+	GLuint jpnumIndices[gn] = { 0 };
+
+
+	glGenVertexArrays(gn, jpVAO);
+	glGenBuffers(2 * gn, jpVBO);
+
+	for (int i = 0; i<gn; i++)
+	{
+		mesh2[i].CalcNormals();
+
+		jpnumVertices[i] = mesh2[i].positions.size();
+		jpnumIndices[i] = mesh2[i].indices.size();
+
+		glBindVertexArray(jpVAO[i]);
+		glBindBuffer(GL_ARRAY_BUFFER, jpVBO[i *2]);
+		glBufferData(GL_ARRAY_BUFFER, jpnumVertices[i] * sizeof(glm::vec3), &mesh2[i].positions[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, jpVBO[i * 2 +1]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, jpnumIndices[i] * sizeof(unsigned int), &mesh2[i].indices[0], GL_STATIC_DRAW);
+
+		glBindVertexArray(0);
+
+	}
+
+	srand((int)time(0));
+
+
+		
+//////////////////////////////////////////
+
+#if 0
+	
+
+	IndexedModel mesh1_0 = OBJModel("./res/glasses/20_12.obj").ToIndexedModel();
+	mesh1_0.CalcNormals();
+
+	GLuint VBO[3], jingkuanVAO;
+
+	glGenVertexArrays(1, &jingkuanVAO);
+	glGenBuffers(3, VBO);
+	glBindVertexArray(jingkuanVAO);
+
+	GLuint numVertices1 = mesh1_0.positions.size();
+	GLuint numIndices1 = mesh1_0.indices.size();
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, numVertices1 * sizeof(glm::vec3), &mesh1_0.positions[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, mesh1_0.normals.size() * sizeof(glm::vec3), &mesh1_0.normals[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VBO[2]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices1 * sizeof(unsigned int), &mesh1_0.indices[0], GL_STATIC_DRAW);
+
+	glBindVertexArray(0);
+
+
+	//镜片模型
+	IndexedModel mesh2_0 = OBJModel("./res/glasses/20_11.obj").ToIndexedModel();//./male_face_eyes.obj
+	mesh2_0.CalcNormals();
+	GLuint numVertices2 = mesh2_0.positions.size();
+	GLuint numIndices2 = mesh2_0.indices.size();
 	GLuint faceVAO2;
 	GLuint faceVBO2;
 	GLuint faceEBO2;
@@ -695,126 +839,17 @@ int main1(vector<string>& ccompath,vector<string >& cfilenames)//, SDL_Window* w
 	glGenBuffers(1, &faceEBO2);
 	glBindVertexArray(faceVAO2);
 	glBindBuffer(GL_ARRAY_BUFFER, faceVBO2);
-	glBufferData(GL_ARRAY_BUFFER, numVertices2 * sizeof(glm::vec3), &mesh2.positions[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, numVertices2 * sizeof(glm::vec3), &mesh2_0.positions[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faceEBO2);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices2 * sizeof(unsigned int), &mesh2.indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices2 * sizeof(unsigned int), &mesh2_0.indices[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
 	glBindVertexArray(0);
+	
+	
+#endif
 
-	//镜框模型
-	IndexedModel mesh1 = OBJModel("./res/glasses/20_1.obj").ToIndexedModel();
-	mesh1.CalcNormals();
-	GLuint numVertices1 = mesh1.positions.size();
-	GLuint numIndices1 = mesh1.indices.size();
-	GLuint faceVAO1;
-	GLuint faceVBO1;
-	GLuint faceEBO1;
 
-	glGenVertexArrays(1, &faceVAO1);
-	glGenBuffers(1, &faceVBO1);
-	glGenBuffers(1, &faceEBO1);
-	glBindVertexArray(faceVAO1);
-	glBindBuffer(GL_ARRAY_BUFFER, faceVBO1);
-	glBufferData(GL_ARRAY_BUFFER, numVertices1 * sizeof(glm::vec3), &mesh1.positions[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faceEBO1);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices1 * sizeof(unsigned int), &mesh1.indices[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
-	glBindVertexArray(0);
-
-	Shader lightingShader("2.2.basic_lighting.vs", "2.2.basic_lighting.fs");
-
-	unsigned int VBO[2], cubeVAO;
-	glGenVertexArrays(1, &cubeVAO);
-	glGenBuffers(2, VBO);
-
-	glBindVertexArray(cubeVAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, numVertices1 * sizeof(glm::vec3), &mesh1.positions[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, mesh1.normals.size() * sizeof(glm::vec3), &mesh1.normals[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
-	glEnableVertexAttribArray(1);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faceEBO1);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices1 * sizeof(unsigned int), &mesh1.indices[0], GL_STATIC_DRAW);
-
-	glBindVertexArray(0);
-
-	//float vertices[] = {
-	//	-0.5f, -0.8f, 0.0f, // left  
-	//	0.5f, -0.5f, 0.0f, // right 
-	//	0.0f,  0.5f, 0.0f  // top   
-	//};
-	float vertices[] = {
-		-3.f, -3.f, 0.f, // left  
-		3.f, -3.f, 0.f, // right 
-		3.f,  3.f, 0.f,  // top   
-
-		//- 3.f, -3.f, 0.f, // left  
-		-3.f, 3.3f, 0.f, // right 
-		//3.f,  3.f, 0.f  // top  
-	};
-	unsigned int indices[] = {  // note that we start from 0!
-		0, 1, 3,  // first Triangle
-		1, 2, 3   // second Triangle
-	};
-	GLuint faceVAO3;
-	GLuint faceVBO3;
-	GLuint faceEBO3;
-	glGenVertexArrays(1, &faceVAO3);
-	glGenBuffers(1, &faceVBO3);
-	glGenBuffers(1, &faceEBO3);
-	glBindVertexArray(faceVAO3);
-	glBindBuffer(GL_ARRAY_BUFFER, faceVBO3);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faceEBO3);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	//glBufferData(GL_ARRAY_BUFFER, numVertices3 * sizeof(glm::vec3), &mesh.positions[0], GL_STATIC_DRAW);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid*)0);
-	//
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindVertexArray(0);
-
-	if (0)
-	{
-		//float vertices[] = {
-		//	-0.5f, -0.5f, 0.0f, // left  
-		//	0.5f, -0.5f, 0.0f, // right 
-		//	0.0f,  0.5f, 0.0f  // top   
-		//};
-
-		//unsigned int VBO, VAO;
-		//glGenVertexArrays(1, &VAO);
-		//glGenBuffers(1, &VBO);
-		//// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-		//glBindVertexArray(VAO);
-
-		//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		//glEnableVertexAttribArray(0);
-
-		//// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-		//glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		//// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-		//// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-		//glBindVertexArray(0);
-	}
 	//=====================以上为VAO/VBO/EBO的设置============================================================
 
 
@@ -841,7 +876,6 @@ int main1(vector<string>& ccompath,vector<string >& cfilenames)//, SDL_Window* w
 	dlib::shape_predictor sp;
 	dlib::deserialize("shape_predictor_68_face_landmarks.dat") >> sp;
 
-	dlib::image_window win;
 	//dlib::array2d<dlib::rgb_pixel> srcImageDLIB;
 	//std::vector<dlib::rectangle> dets;
 
@@ -892,22 +926,22 @@ try{
 			srcImageCV = srcroi.clone();
 		}
 
-		if (0) {
+		//if (0) {
 
-			int hw = std::min(srcImageCV.rows, srcImageCV.cols);
+		//	int hw = std::min(srcImageCV.rows, srcImageCV.cols);
 
-			cv::Mat srcroi = srcImageCV(cv::Rect(0, 0, hw, hw)).clone();
-			cv::Mat dst;
-			cv::resize(srcroi, dst, cv::Size(WIDTH, HEIGHT), (0, 0), (0, 0), cv::INTER_LINEAR);
-			cv::imwrite("ywl/dst_2.jpg", dst);
+		//	cv::Mat srcroi = srcImageCV(cv::Rect(0, 0, hw, hw)).clone();
+		//	cv::Mat dst;
+		//	cv::resize(srcroi, dst, cv::Size(WIDTH, HEIGHT), (0, 0), (0, 0), cv::INTER_LINEAR);
+		//	cv::imwrite("ywl/dst_2.jpg", dst);
 
-			dets.clear();
-			srcImageDLIB.clear();
-			dlib::assign_image(srcImageDLIB, dlib::cv_image<dlib::bgr_pixel>(dst));
-			dets = detector(srcImageDLIB);
+		//	dets.clear();
+		//	srcImageDLIB.clear();
+		//	dlib::assign_image(srcImageDLIB, dlib::cv_image<dlib::bgr_pixel>(dst));
+		//	dets = detector(srcImageDLIB);
 
-			srcImageCV = dst.clone();
-		}
+		//	srcImageCV = dst.clone();
+		//}
 
 		int savecols = 0;
 		int saverows = 0;
@@ -930,7 +964,7 @@ try{
 			//WIDTH = srcImageCV.cols ;
 			//HEIGHT = srcImageCV.rows;
 			cv::resize(srcImageCV, dst, cv::Size(WIDTH, HEIGHT), 0, 0, cv::INTER_LINEAR);
-			//cv::imwrite("scale/" + filename[index], dst);
+			//cv::imwrite("./prnet/" + filename[index], dst);
 			dets.clear();
 			srcImageDLIB.clear();
 			dlib::assign_image(srcImageDLIB, dlib::cv_image<dlib::bgr_pixel>(dst));
@@ -944,36 +978,29 @@ try{
 
 
 		std::vector<cv::Point2f> srcImagePoints;
-		int i;
-		i = 36; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 39; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 45; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 42; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 31; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 35; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 48; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 54; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 8;	srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-
-		//i = 37; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		//i = 38; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		//i = 46; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		//i = 47; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-
-		i = 0; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 16; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-
-		i = 5; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 11; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-
-		i = 4; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		i = 12; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-
-		i = 30; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-
-		//i = 19; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-		//i = 24; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
-
+		int i=0;
+		int kpt[] = {
+			36,39,45,42,	31,35,	48,54,	8,
+			37,38, 40,41, 43,44, 46,47,
+			0,16,
+			5,11,
+			4,12,
+			27,28,29,
+			30,
+			//19,24
+		};
+		for (;i<sizeof(kpt)/sizeof(kpt[0]);i++)
+		{
+			srcImagePoints.push_back(cv::Point2f(shape.part(kpt[i]).x(), shape.part(kpt[i]).y()));
+		}
+		//i = 36; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
+		//i = 39; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
+		//i = 45; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
+		//i = 42; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
+		//i = 31; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
+		//i = 35; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
+		//i = 48; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
+		//i = 54; srcImagePoints.push_back(cv::Point2f(shape.part(i).x(), shape.part(i).y()));
 		shapes.clear();
 		shapes.push_back(shape);
 
@@ -983,7 +1010,7 @@ try{
 
 			vector<cv::Point2f > ivec;
 			string s;
-			string FILE_NAME = "scale/" + filename[index].substr(0, filename[index].length() - 4) + "_kpt.txt";
+			string FILE_NAME = /*"prnet/"*/"G:/Downloads/PRNet-master/TestImages/results/scale/" + filename[index].substr(0, filename[index].length() - 4) + "_kpt.txt";
 
 			std::ifstream input_file;
 			input_file.open(FILE_NAME, std::ifstream::in);
@@ -992,12 +1019,12 @@ try{
 				std::cout << "open file fail" << filename[index] << endl;
 				continue;
 			}
-			cv::Point2f kpt;
+			cv::Point2f keypt;
 			while (!input_file.eof())
 			{
 				getline(input_file, s);
-				kpt = split(s, " ");
-				ivec.push_back(kpt);
+				keypt = split(s, " ");
+				ivec.push_back(keypt);
 				//.std::cout << kpt << std::endl;
 
 			}
@@ -1005,7 +1032,13 @@ try{
 
 			//重新装载关键点
 			srcImagePoints.clear();
-			int i;
+			int i = 0;
+
+			for (; i<sizeof(kpt) / sizeof(kpt[0]); i++)
+			{
+				srcImagePoints.push_back(ivec[kpt[i]]);
+			}
+			/*
 			i = 36; srcImagePoints.push_back(ivec[i]);
 			i = 39; srcImagePoints.push_back(ivec[i]);
 			i = 45; srcImagePoints.push_back(ivec[i]);
@@ -1015,20 +1048,9 @@ try{
 			i = 48; srcImagePoints.push_back(ivec[i]);
 			i = 54; srcImagePoints.push_back(ivec[i]);
 			i = 8;	srcImagePoints.push_back(ivec[i]);
-
-			i = 37; srcImagePoints.push_back(ivec[i]);
-			i = 38; srcImagePoints.push_back(ivec[i]);
-			i = 46; srcImagePoints.push_back(ivec[i]);
-			i = 47; srcImagePoints.push_back(ivec[i]);
-
-			i = 0; srcImagePoints.push_back(ivec[i]);
-			i = 16; srcImagePoints.push_back(ivec[i]);
-			i = 30; srcImagePoints.push_back(ivec[i]);
-
-			//shapes.push_back(shape);
-
+*/
 		}
-		if (0)//./在图片中显示关键点位置//显示了11个人脸的关键点后关闭开关为0
+		if (01)//./在图片中显示关键点位置//显示了11个人脸的关键点后关闭开关为0
 		{
 			cv::Mat tmp = srcImageCV.clone();
 			for (int i = 0; i < srcImagePoints.size(); i++)
@@ -1036,11 +1058,13 @@ try{
 				cv::circle(tmp, srcImagePoints[i], 4, cv::Scalar(1, 0, 0), 3);
 
 			}
-			imwrite("9dian/" + filename[index], tmp);
+			imwrite("9dian/" + filename[index], tmp);//fromprn
 
 		}
 		if (0)//./窗口显示关键点连线
 		{
+			dlib::image_window win;
+
 			win.clear_overlay();
 			win.set_image(srcImageDLIB);
 			win.add_overlay(dlib::render_face_detections(shapes));
@@ -1190,7 +1214,7 @@ try{
 		glProgramUniformMatrix4fv(program, uVPLocation, 1, false, glm::value_ptr(viewProjection));
 		glProgramUniform2f(program, uv2Location, 0., 0.);
 
-		if (01)//./产生背景
+		if (01)//./产生背景,大人脸
 		{
 			glProgramUniformMatrix4fv(program, uMLocation, 1, false, glm::value_ptr(glm::scale(bgmodel*r, glm::vec3(3.0))));
 
@@ -1227,8 +1251,8 @@ try{
 			//glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
 			//glBindVertexArray(0);
 		}
-
-		if (01)
+#define verification false
+		if (01)//./小人脸
 		{
 			//glm::mat4 viewProjectionface = glm::mat4(1);
 
@@ -1247,11 +1271,15 @@ try{
 
 
 			//人脸网格模型
-			//glBindTexture(GL_TEXTURE_2D, 0);
-			//glBindVertexArray(faceVAO);
-			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			//glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
-			//glBindVertexArray(0);
+			if(verification)
+			{
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glBindVertexArray(faceVAO);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+			glBindVertexArray(0);
+			 }
+			
 			//人脸纹理
 			glBindTexture(GL_TEXTURE_2D, srcImageTexture);
 			glBindVertexArray(faceVAO);
@@ -1277,31 +1305,35 @@ try{
 		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);//./glDrawArrays(GL_TRIANGLES, 0, 6);
 		//glBindVertexArray(0);
 
-		//固定的坐标轴三角形
-		//glProgramUniformMatrix4fv(program, uVPLocation, 1, false, glm::value_ptr(viewProjection));
-		//glProgramUniformMatrix4fv(program, uMLocation, 1, false, glm::value_ptr(glm::mat4(1.0)));
-		//glBindTexture(GL_TEXTURE_2D, 0);
-		//glBindVertexArray(faceVAO3);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		//glDrawArrays(GL_TRIANGLES, 0, 3);
-		//glBindVertexArray(0);
-
+		int random=rand() % gn;
+#define thresh 0.2
 
 		//眼镜片
-		if (01)
+		if (!verification)
 		{
-			glUseProgram(program);
-			glProgramUniform2f(program, uv2Location, normv.x, normv.y);
+			//float fx = normv.x < -0.3 ? normv.x*0.5 - 0.15 : normv.x>0.3 ? normv.x*0.5 + 0.15 : normv.x;
+			float fx = normv.x < -thresh ? -thresh : normv.x>thresh ? thresh : normv.x;
 
-			glProgramUniformMatrix4fv(program, uMLocation, 1, false, glm::value_ptr(glm::scale(model2 * r, glm::vec3(0.02))));
+			glUseProgram(program);
+			//glProgramUniform2f(program, uv2Location, normv.x, normv.y);
+			glProgramUniform2f(program, uv2Location, fx, normv.y);
+			
+			glProgramUniformMatrix4fv(program, uMLocation, 1, false, glm::value_ptr(model));
+			//glProgramUniformMatrix4fv(program, uMLocation, 1, false, glm::value_ptr(glm::scale(model2 * r, glm::vec3(0.02))));
 			glBindTexture(GL_TEXTURE_2D, srcImageTexture);
-			glBindVertexArray(faceVAO2);
+			glBindVertexArray(jpVAO[random]);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glDrawElements(GL_TRIANGLES, numIndices1, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, jpnumIndices[random], GL_UNSIGNED_INT, 0);
 			glBindVertexArray(0);
+			//glBindVertexArray(faceVAO2);
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			//glDrawElements(GL_TRIANGLES, numIndices1, GL_UNSIGNED_INT, 0);
+			//glBindVertexArray(0);
 		}
 
 		//镜框
+		if (!verification)
+		{
 		lightingShader.use();
 		//./lightingShader.setVec3("objectColor", 0.1, 0.1, 0.1);//1.0f, 0.5f, 0.31f
 
@@ -1314,27 +1346,37 @@ try{
 
 		// world transformation
 		//glm::mat4 model;
-		lightingShader.setMat4("model", glm::scale(model2 * r, glm::vec3(0.02)));
+		lightingShader.setMat4("model", model/*glm::scale(model2 * r, glm::vec3(0.02))*/);
 
 		// render the cube
-		glBindVertexArray(cubeVAO);
+		
+		glBindVertexArray(jkVAO[random]);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glDrawElements(GL_TRIANGLES, jknumIndices[random], GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);	
+		
+		/*glBindVertexArray(jingkuanVAO);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDrawElements(GL_TRIANGLES, numIndices1, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
-		
-		SDL_GL_SwapWindow(window);
+		glBindVertexArray(0);*/
+		}
 
+
+		SDL_GL_SwapWindow(window);
 
 		ScreenShot("tmp/" + picpath);
 
 		cv::Mat dst;
-
 		cv::Mat srct = cv::imread("tmp/" + picpath);
 		//WIDTH = srcImageCV.cols ;
 		//HEIGHT = srcImageCV.rows;
 		cv::resize(srct, dst, cv::Size(savecols, saverows), 0, 0, cv::INTER_LINEAR);
 		//./cv::resize(srcroi, dst, cv::Size(300,400), (0, 0), (0, 0), cv::INTER_LINEAR);
 		//string savepath = completepath[index].substr(0, strlen(completepath[index].c_str()) - strlen(filename[index].c_str()) -1)+"_result";
+		
+		if (0)//old
+		{
+		
 		string savepath = completepath[index].substr(0, completepath[index].rfind('/')) + "/result";
 		_mkdir(savepath.c_str());
 		savepath=savepath+completepath[index].substr(completepath[index].find('\\'), completepath[index].rfind('\\')- completepath[index].find('\\'));
@@ -1343,7 +1385,14 @@ try{
 		//savepath = savepath + "/" + filename[index];
 		cv::imwrite(savepath, dst);
 		//cv::imwrite(picspath + "_result/" + picpath, dst);
-		
+		}
+		else//g盘满了空间，转了盘
+		{
+			string savepath = "E:/vggface2_train_xa2/result" + completepath[index].substr(completepath[index].find('\\'), completepath[index].rfind('\\') - completepath[index].find('\\'));
+			_mkdir(savepath.c_str());
+			savepath = savepath + "/" + filename[index];
+			cv::imwrite(savepath, dst);
+		}
 		
 
 		srcImageCV.release();
@@ -1359,7 +1408,7 @@ try{
 		srcImageCV.release();
 		dets.clear();
 		srcImageDLIB.clear();
-		std::ofstream out("testf300.txt", std::ios::out | std::ios::app);
+		std::ofstream out("trainf3000.txt", std::ios::out | std::ios::app);
 
 		out << completepath[index] << std::endl;
 
@@ -1370,16 +1419,22 @@ try{
 	glDeleteBuffers(1, &faceVBO);
 	glDeleteVertexArrays(1, &faceVAO);
 
-	glDeleteBuffers(1, &faceEBO1);
-	glDeleteBuffers(1, &faceVBO1);
-	glDeleteVertexArrays(1, &faceVAO1);
+	glDeleteBuffers(gn * 3, jkVBO);
+	glDeleteVertexArrays(gn , jkVAO);
+
+	glDeleteBuffers(gn * 2, jpVBO);
+	glDeleteVertexArrays(gn , jpVAO);
+#if 0
+	glDeleteBuffers(1, &VBO[2]);
 
 	glDeleteBuffers(1, &faceEBO2);
 	glDeleteBuffers(1, &faceVBO2);
 	glDeleteVertexArrays(1, &faceVAO2);
 
 	glDeleteBuffers(2, VBO);
-	glDeleteVertexArrays(1, &cubeVAO);
+	glDeleteVertexArrays(1, &jingkuanVAO);
+#endif
+
 
 	SDL_GL_DeleteContext(glContext);
 	SDL_DestroyWindow(window);
@@ -1402,11 +1457,22 @@ int main(int argc, char** argv)
 	//SDL_Window* window = SDL_CreateWindow(TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WIDTH, HEIGHT, SDL_WINDOW_OPENGL);
 	//SDL_GLContext glContext = SDL_GL_CreateContext(window);
 
-	const int minbatch = 3000;
+	const int minbatch = 5000;// 2500;
 	vector<string > completepath;
 	vector<string > filename;
 
-	string picspath = "G:/Downloads/vggface2_test/test/300";// "C:/Users/123/Desktop/bugpics";// "res/vggface2train/3";// "res/n000259";
+	
+	string picspath;
+	if (1==argc)
+	{	
+		picspath = "C:/Users/123/Desktop/1/org";//"G:/Downloads/PRNet-master/scale";// "G:/Downloads/vggface2_train/train";// "C:/Users/123/Desktop/bugpics";// "res/vggface2train/3";// "res/n000259";
+
+	}
+	else
+	{
+		picspath = argv[1];
+	}
+
 	getFiles(picspath, completepath, filename);//"res/testprn"//smallscale//"res/test"//imm_face_db./路径末尾可以不用分隔符
 	int i = 0;
 	for (;minbatch * i + minbatch<completepath.size();i++)
@@ -1421,11 +1487,19 @@ int main(int argc, char** argv)
 
 	cout << "end:	" <<i<< completepath[minbatch*i] << endl;
 
-	vector<string > completepath_minbatch(completepath.end() - minbatch, completepath.end());
-	vector<string > filename_minbatch(filename.end() - minbatch, filename.end());
-
-	main1(completepath_minbatch, filename_minbatch);//, window);
+	if(0==i)
+	{ 
+		vector<string > completepath_minbatch(completepath.begin(), completepath.end());
+		vector<string > filename_minbatch(filename.begin(), filename.end());
+		main1(completepath_minbatch, filename_minbatch);//, window);
 	
+	}
+	else
+	{
+		vector<string > completepath_minbatch(completepath.end() - minbatch, completepath.end());
+		vector<string > filename_minbatch(filename.end() - minbatch, filename.end());
+		main1(completepath_minbatch, filename_minbatch);//, window);
+	}
 	//SDL_GL_DeleteContext(glContext);
 	//SDL_DestroyWindow(window);
 	//SDL_Quit();
